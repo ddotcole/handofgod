@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>    
+    <title>Hand of God - A Conway's Game of Life</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="utf8"/>
+    <script src="canvas2apng.js"></script>
+    <script src="script.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body onload="start()">
+    <div id='splash'>
+        <div id="header">
+            <span style="font-size: 3rem;">The</span><br>
+            <span style="font-size: 6rem;">Hand</span><span style="font-size: 3rem;">&nbsp&nbsp of &nbsp&nbsp</span><span style="font-size: 6rem;">God</span>
+        </div>
+        <div id="logo" >
+            <img src="images\splash_logo.png" style="width:200px;position:fixed;left: 15%;top:50%;transform: translate(-15%, -50%);">
+            <img src="images\splash_logo.png" style="width:200px;position:fixed;right: 15%;top:50%;transform: translate(-15%, -50%);">
+        </div>
+        <button id="start" onclick="document.getElementById('main').style.display = 'block';document.getElementById('splash').style.display = 'none';start()">Start</button>
+    </div>
+    <span id="main">
+        <div id='content'></div>
+        <span style="display:block;" id="control_score">
+            <div id='control'>
+                <p>
+                    <span style="margin-right:20px;color:goldenrod">Frame Rate</span>
+                    <input onchange="if(game.playing){play();play()}" style='width:5ch' type="number" id="frame_rate" min="1" max="60" value="7"></input>
+                </p>
+                <p>
+                    <button id='update' title='Advance 1 Generation' onclick="update()"><img class='button' src='icons\update.svg'></button>  
+                    <button id='play' title='Animate' onclick="play()"><img class='button' src='icons\play.svg'></button>                    
+                    <button id='reset' title='Reload Game Area' onclick="reset()"><img class='button' src='icons\refresh.svg'></button>
+                    <button id="record" title='Record Animation (apng)' onclick="record()"><img class='button' src='icons\record.svg'></button>
+                    <button id="snapshot" title='Take Snapshot (png)' onclick="screenshot()"><img class='button' src='icons\snapshot.svg'></button>
+                    <button id="display" style="margin-left:20px;" title='Display Animation' onclick="menu('displayAnimation')"><img class='button' src='icons\display.svg'></button>
+                    <button id="settings" title='Settings Menu' onclick="menu('displaySettings')"><img class='button' src='icons\settings.svg'></button>
+                    <button id="info" title='Game Information' onclick="menu('displayInfo')"><img class='button' src='icons\info.svg'></button>
+                </p>
+            </div>
+            <div id='score'>
+                        Generations:&nbsp&nbsp<span id='generations'></span>&nbsp&nbsp&nbsp
+                        Manipulations:&nbsp&nbsp<span id='manipulations'></span>&nbsp&nbsp&nbsp
+                        FPS:&nbsp&nbsp<span id='fps'></span>&nbsp&nbsp&nbsp
+                        Cells:&nbsp&nbsp<span id='cells'></span>
+            </div>
+        </span>
+    </span>
+    <div id='displayAnimation' class='menu'>
+        <p><img id='animation' style='width:100%;' src=''></p>
+        <p><a href="javascript:;" onclick="downloadPNG(this)">Download</a></p>          
+    </div> 
+    <div id='displaySettings' class='menu'>
+        <h1><span>Settings</span></h1>
+        <p><span style='margin-right: 15px;'>Screen Width</span><input style='width:6ch' type="number" id="canvas.width" min="10"></input></p>
+        <p><span style='margin-right: 15px;'>Screen Height</span><input style='width:6ch' type="number" id="canvas.height" min="10"></input></p>
+        <p><span style='margin-right: 15px;'>Cell Size</span><input style='width:5ch' type="number" id="cellSize" min="1" value="10" max='20'></input></p>
+        <br>
+        <p>
+            <button onclick="apply()" style="padding:5px 15px;">Apply</button>
+            <button onclick="cancel('displaySettings')" style="padding:5px 15px;">Cancel</button>
+        </p>
+    </div>
+    <div id='displayInfo' class='menu'>
+        <p>Welcome to "Hand of God", my own version of John Conway's "Game of Life"!  I have named it this as the object
+        of the game is to both create and destroy life, much like the hand of God.<br><br>
+        This game is quite open to exploration.  Begin by drawing different shapes with the mouse on the game area to the right.  
+        Click 'Clear Canvas' to reset the game area if you bugger up.  Once you have drawn what you want, click the 'Start Game' button.  
+        Watch your creation come to life!<br><br>
+        At this point watch what happens.  The cells could die quickly, reach a stable point or even go on forever!  If you want to wield your 
+        God like hand of destruction, click around on the screen near shapes as the game plays or click the 'Stop Game' button to pause the 
+        game.  When life is paused, you can set up a lot of cells for destruction.  Then start the game again to watch your cells DIE!!!  
+        If you kill them all and your game area is all black, you have won!  You are now free to recreate life, hopefully better this time.<br><br>
+        </p>
+            <p>
+                <p><b>Ways to CREATE life:</b></p><br>
+                <b>Glider</b>
+                <p><img src='images/glider.png' style="width:75px;"></p><br>
+                <b>Long Brick</b>
+                <p><img src='images/longbrick.png' style="width:75px;"></p><br>
+                <b>Heart</b>
+                <p><img src='images/heart.png' style="width:135px;"></p><br>
+                <b>Short Brick</b>
+                <p><img src='images/shortbrick.png' style="width:135px;"></p>
+            </p><br><br>
+            <p><b>Ways to DESTROY life:</b></p><br>
+            <p>
+                <b>Square</b>
+                <p><img src='images/square.png' style="width:75px;"></p><br>
+                <b>Coin</b>
+                <p><img src='images/coin.png' style="width:75px"></p><br>
+                <b>Stick</b>
+                <p><img src='images/stick.png' style="width:75px"></p><br>
+            </p>
+</div>
+<script>
+    if(localStorage.getItem("firstVisit") === null){
+        localStorage.firstVisit = false
+        document.getElementById("main").style.display = 'none'
+        document.getElementById("splash").style.display = 'block'
+    }
+</script>
+</body>
+</html>
